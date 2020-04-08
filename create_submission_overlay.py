@@ -25,12 +25,16 @@ cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
 
 test_dir = 'test/images'
-pred_folders = ['dpn92cls_cce_0_tuned', 'dpn92cls_cce_1_tuned', 'dpn92cls_cce_2_tuned'] + ['res34cls2_0_tuned', 'res34cls2_1_tuned', 'res34cls2_2_tuned'] + ['res50cls_cce_0_tuned', 'res50cls_cce_1_tuned', 'res50cls_cce_2_tuned'] + ['se154cls_0_tuned', 'se154cls_1_tuned', 'se154cls_2_tuned']
-pred_coefs = [1.0] * 12
-loc_folders = ['pred50_loc_tuned', 'pred92_loc_tuned', 'pred34_loc', 'pred154_loc']
-loc_coefs = [1.0] * 4 
+# pred_folders = ['dpn92cls_cce_0_tuned', 'dpn92cls_cce_1_tuned', 'dpn92cls_cce_2_tuned'] + ['res34cls2_0_tuned', 'res34cls2_1_tuned', 'res34cls2_2_tuned'] + ['res50cls_cce_0_tuned', 'res50cls_cce_1_tuned', 'res50cls_cce_2_tuned'] + ['se154cls_0_tuned', 'se154cls_1_tuned', 'se154cls_2_tuned']
+# pred_coefs = [1.0] * 12
+# loc_folders = ['pred50_loc_tuned', 'pred92_loc_tuned', 'pred34_loc', 'pred154_loc']
+# loc_coefs = [1.0] * 4 
+pred_folders = ['res34cls2_0_tuned']
+pred_coefs = [1.0] * 1
+loc_folders = ['pred34_loc']
+loc_coefs = [1.0] * 1
 
-sub_folder = 'submission'
+# sub_folder = 'submission'
 
 _thr = [0.38, 0.13, 0.14]
 
@@ -65,14 +69,27 @@ def process_image(f):
         msk_dmg[_msk & msk_dmg == 1] = 2
 
     msk_dmg = msk_dmg.astype('uint8')
-    cv2.imwrite(path.join(sub_folder, '{0}'.format(f.replace('_pre_', '_localization_').replace('_part1', '_prediction'))), msk_loc, [cv2.IMWRITE_PNG_COMPRESSION, 9])
-    cv2.imwrite(path.join(sub_folder, '{0}'.format(f.replace('_pre_', '_damage_').replace('_part1', '_prediction'))), msk_dmg, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    # cv2.imwrite(path.join(sub_folder, '{0}'.format(f.replace('_pre_', '_localization_').replace('_part1', '_prediction'))), msk_loc, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+    # cv2.imwrite(path.join(sub_folder, '{0}'.format(f.replace('_pre_', '_damage_').replace('_part1', '_prediction'))), msk_dmg, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+
+    orig = cv2.imread(os.path.join(test_dir, f.replace('_part1', '')))
+    # cv2.imwrite('verify/mask_{}.png'.format(f.split('_')[2]), msk_dmg*63)
+    out = orig.copy()
+    img_layer = orig.copy()
+    img_layer[np.where(msk_dmg==1)] = [255, 0, 0] # blue, undamaged
+    img_layer[np.where(msk_dmg==2)] = [52, 180, 235] # light orange, minor damage
+    img_layer[np.where(msk_dmg==3)] = [52, 128, 235] # dark orange, major damage
+    img_layer[np.where(msk_dmg==4)] = [0, 0, 255] # red, destroyed
+    alpha = 0.6
+    cv2.addWeighted(img_layer, alpha, out, 1 - alpha, 0, out)
+    cv2.imwrite('verify/masked_{}.png'.format(f.split('_')[2]), out)
+
 
 
 if __name__ == '__main__':
     t0 = timeit.default_timer()
 
-    makedirs(sub_folder, exist_ok=True)
+    # makedirs(sub_folder, exist_ok=True)
 
     all_files = []
     for f in tqdm(sorted(listdir(pred_folders[0]))):

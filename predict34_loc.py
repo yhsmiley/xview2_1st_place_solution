@@ -1,7 +1,7 @@
 import os
 
 from os import path, makedirs, listdir
-import sys
+# import sys
 import numpy as np
 np.random.seed(1)
 import random
@@ -9,11 +9,11 @@ random.seed(1)
 
 import torch
 from torch import nn
-from torch.backends import cudnn
+# from torch.backends import cudnn
 
 from torch.autograd import Variable
 
-import pandas as pd
+# import pandas as pd
 from tqdm import tqdm
 import timeit
 import cv2
@@ -92,7 +92,7 @@ if __name__ == '__main__':
                 
                 msk = pred_full * 255
                 msk = msk.astype('uint8').transpose(1, 2, 0)
-                cv2.imwrite(path.join(pred_folder, '{0}.png'.format(f.replace('.png', '_part1.png'))), msk[..., 0], [cv2.IMWRITE_PNG_COMPRESSION, 9])
+                cv2.imwrite(path.join(pred_folder, '{0}'.format(f.replace('.png', '_part1.png'))), msk[..., 0], [cv2.IMWRITE_PNG_COMPRESSION, 9])
 
     elapsed = timeit.default_timer() - t0
     print('Time: {:.3f} min'.format(elapsed / 60))

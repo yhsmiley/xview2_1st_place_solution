@@ -10,6 +10,7 @@ random.seed(1)
 import torch
 from torch import nn
 # from torch.backends import cudnn
+
 from torch.autograd import Variable
 
 # import pandas as pd
@@ -17,7 +18,7 @@ from tqdm import tqdm
 import timeit
 import cv2
 
-from zoo.models import SeNet154_Unet_Loc
+from zoo.models import Res34_Unet_Loc
 
 from utils import *
 
@@ -25,7 +26,7 @@ cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
 
 test_dir = 'test/images'
-pred_folder = 'pred154_loc'
+pred_folder = 'pred34_loc'
 models_folder = 'weights'
 
 if __name__ == '__main__':
@@ -40,24 +41,25 @@ if __name__ == '__main__':
 
     models = []
 
-    for seed in [0, 1, 2]:
-        snap_to_load = 'se154_loc_{}_1_best'.format(seed)
-        model = SeNet154_Unet_Loc().cuda()
-        model = nn.DataParallel(model).cuda()
-        print("=> loading checkpoint '{}'".format(snap_to_load))
-        checkpoint = torch.load(path.join(models_folder, snap_to_load), map_location='cpu')
-        loaded_dict = checkpoint['state_dict']
-        sd = model.state_dict()
-        for k in model.state_dict():
-            if k in loaded_dict and sd[k].size() == loaded_dict[k].size():
-                sd[k] = loaded_dict[k]
-        loaded_dict = sd
-        model.load_state_dict(loaded_dict)
-        print("loaded checkpoint '{}' (epoch {}, best_score {})"
-                .format(snap_to_load, checkpoint['epoch'], checkpoint['best_score']))
-        model.eval()
-        models.append(model)
-
+    # for seed in [0, 1, 2]:
+    # snap_to_load = 'res34_loc_{}_1_best'.format(seed)
+    snap_to_load = 'res34_loc_{}_1_best'.format(0)
+    model = Res34_Unet_Loc().cuda()
+    model = nn.DataParallel(model).cuda()
+    print("=> loading checkpoint '{}'".format(snap_to_load))
+    checkpoint = torch.load(path.join(models_folder, snap_to_load), map_location='cpu')
+    loaded_dict = checkpoint['state_dict']
+    sd = model.state_dict()
+    for k in model.state_dict():
+        if k in loaded_dict and sd[k].size() == loaded_dict[k].size():
+            sd[k] = loaded_dict[k]
+    loaded_dict = sd
+    model.load_state_dict(loaded_dict)
+    print("loaded checkpoint '{}' (epoch {}, best_score {})"
+            .format(snap_to_load, checkpoint['epoch'], checkpoint['best_score']))
+    model.eval()
+    models.append(model)
+    
 
     with torch.no_grad():
         for f in tqdm(sorted(listdir(test_dir))):
